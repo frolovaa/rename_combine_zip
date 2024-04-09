@@ -1,0 +1,45 @@
+#!/bin/bash
+
+# Initialize sample counter
+sample_num=1
+
+# Loop through each folder in the current directory
+for folder in */; do
+    # Extract sample ID from folder name
+    sample_id=$(basename "$folder")
+
+    # Loop through each file in the folder
+    for file in "$folder"*.gz; do
+        if [[ $file == *forward.fastqsanger.gz ]]; then
+            # Rename forward.fastqsanger.gz
+            mv "$file" "${folder}${sample_id}_S${sample_num}_L001_R1_001.fastq.gz"
+        elif [[ $file == *reverse.fastqsanger.gz ]]; then
+            # Rename reverse.fastqsanger.gz
+            mv "$file" "${folder}${sample_id}_S${sample_num}_L001_R2_001.fastq.gz"
+        fi
+    done
+
+    # Increment sample counter
+    ((sample_num++))
+done
+
+# Get today's date in YYMMDD format
+today=$(date +"%y%m%d")
+
+# Create a new folder with the specified name format
+new_folder="SG_${today}_M000XX"
+mkdir "$new_folder"
+
+# Loop through each folder in the current directory
+for folder in */; do
+    # Copy files and subdirectories to the new folder
+    cp -r "${folder}"* "$new_folder"
+done
+
+# Zip the newly created folder
+if zip -r "${new_folder}.zip" "$new_folder"; then
+    echo "Zipped $new_folder to ${new_folder}.zip"
+else
+    echo "Error zipping $new_folder"
+    exit 1
+fi
